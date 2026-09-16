@@ -18,6 +18,9 @@ public class ObjectPool : MonoBehaviour
     // --- Prefabs a reciclar (se asignan en el Inspector) ---
     [SerializeField] private WorldObject prefabObstaculo;
     [SerializeField] private WorldObject prefabColeccionable;
+    [SerializeField] private WorldObject prefabProyectil;
+    [SerializeField] private WorldObject[] prefabsNaveEnemiga;
+    [SerializeField] private WorldObject prefabDisparoJugador;
     [SerializeField] private int cantidadInicial = 5;
 
     // --- Las 3 estructuras ---
@@ -51,6 +54,9 @@ public class ObjectPool : MonoBehaviour
     {
         CrearColaParaTipo(TipoObjeto.Obstaculo);
         CrearColaParaTipo(TipoObjeto.Coleccionable);
+        CrearColaParaTipo(TipoObjeto.Proyectil);
+        CrearColaParaTipo(TipoObjeto.NaveEnemiga);
+        CrearColaParaTipo(TipoObjeto.DisparoJugador);
 
         Debug.Log("Pool listo. Obstaculos libres: " + objetosLibres[TipoObjeto.Obstaculo].Count
             + " | Coleccionables libres: " + objetosLibres[TipoObjeto.Coleccionable].Count
@@ -88,9 +94,22 @@ public class ObjectPool : MonoBehaviour
         {
             return prefabObstaculo;
         }
-        else
+        else if (tipo == TipoObjeto.Coleccionable)
         {
             return prefabColeccionable;
+        }
+        else if (tipo == TipoObjeto.Proyectil)
+        {
+            return prefabProyectil;
+        }
+        else if (tipo == TipoObjeto.NaveEnemiga)
+        {
+            int indice = Random.Range(0, prefabsNaveEnemiga.Length);
+            return prefabsNaveEnemiga[indice];
+        }
+        else
+        {
+            return prefabDisparoJugador;
         }
     }
 

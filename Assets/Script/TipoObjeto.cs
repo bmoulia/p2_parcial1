@@ -1,10 +1,12 @@
 // ============================================================
-// TipoObjeto.cs
-// Enum con los tipos de objeto que maneja el pool.
-// Es la CLAVE del Dictionary: cada tipo tiene su propia cola.
+// TipoObjeto.cs  (ACTUALIZADO)
+// Sumamos DisparoJugador como quinto tipo reciclable por el pool.
 // ============================================================
 public enum TipoObjeto
 {
     Obstaculo,
-    Coleccionable
+    Coleccionable,
+    Proyectil,
+    NaveEnemiga,
+    DisparoJugador
 }

@@ -2,11 +2,18 @@ using UnityEngine;
 
 // ============================================================
 // Obstacle.cs  (ACTUALIZADO)
-// Cambio: en vez de congelar el tiempo a mano, avisa al
-// GameManager que el jugador murio.
+// Cambio: marcamos que el obstaculo SI es destruible por el disparo
+// del jugador (sobrescribimos EsDestruible). Como EnemyShip hereda de
+// Obstacle, las naves tambien quedan destruibles automaticamente.
 // ============================================================
 public class Obstacle : WorldObject
 {
+    // Este objeto (y sus hijos, como EnemyShip) se puede destruir a tiros.
+    public override bool EsDestruible
+    {
+        get { return true; }
+    }
+
     protected override void Reaccionar(bool coincide, Player jugador)
     {
         if (coincide == false)

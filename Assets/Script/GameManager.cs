@@ -1,5 +1,6 @@
 using System;         // para poder usar "event Action" (los eventos del Observer)
 using UnityEngine;
+using UnityEngine.SceneManagement; // para recargar la escena al reiniciar
 
 // ============================================================
 // GameManager.cs
@@ -68,10 +69,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // TEMPORAL para probar sin menu: arrancamos jugando directo.
-        // Cuando armemos la UI, esto va a quedar en EstadoJuego.Menu
-        // y el boton "Jugar" va a llamar a IniciarJuego().
-        IniciarJuego();
+        // Arrancamos en el menu de inicio. El boton "Jugar" llamara a IniciarJuego().
+        CambiarEstado(EstadoJuego.Menu);
     }
 
     private void Update()
@@ -152,5 +151,15 @@ public class GameManager : MonoBehaviour
         distanciaRecorrida = 0f;
         puntaje = 0;
         CambiarEstado(EstadoJuego.Jugando);
+    }
+
+        // Reinicia la partida recargando la escena completa.
+    // Es la forma mas simple y segura de dejar todo en cero: pool,
+    // objetos activos, posiciones, todo vuelve al estado inicial.
+    public void ReiniciarJuego()
+    {
+        Time.timeScale = 1f; // destrabamos el tiempo antes de recargar
+        Scene escenaActual = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(escenaActual.name);
     }
 }

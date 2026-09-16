@@ -2,17 +2,20 @@ using UnityEngine;
 
 // ============================================================
 // WorldObject.cs  (ACTUALIZADO)
-// Cambio: nuevo metodo EstablecerPolaridad(). El Spawner lo usa
-// para asignarle una polaridad al azar a cada objeto que genera,
-// y de paso lo repinta. La polaridad sigue siendo privada: solo
-// se cambia a traves de este metodo controlado (encapsulamiento).
+// Cambios:
+//  1) indicadorRenderer: un Renderer opcional que se pinta con el
+//     color de la polaridad. Si queda vacio en el Inspector, se usa
+//     el Renderer propio (asi los cubos siguen andando igual, y las
+//     naves importadas pintan un cubito hijo como indicador).
+//  2) Activar() pasa a virtual: la nave enemiga lo pisa para resetear
+//     su temporizador de disparo cada vez que sale del pool.
 // ============================================================
 public abstract class WorldObject : MonoBehaviour, IPoolable
 {
     [SerializeField] private Polaridad polaridad;
     [SerializeField] private float zDeReciclado = -10f;
+    [SerializeField] private Renderer indicadorRenderer; // opcional (vacio = uso el mio)
 
-    private Renderer miRenderer;
     private TipoObjeto tipo;
 
     public Polaridad Polaridad
@@ -25,27 +28,38 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
         get { return tipo; }
         set { tipo = value; }
     }
-
-    private void Awake()
+    
+    // Indica si el disparo del jugador puede destruir este objeto.
+    // Por defecto NO. Las clases que sí (Obstacle, EnemyShip) lo pisan.
+    public virtual bool EsDestruible
     {
-        miRenderer = GetComponent<Renderer>();
+        get { return false; }
     }
 
-    private void Start()
+    protected virtual void Awake()
+    {
+        // Si no asignaron un indicador en el Inspector, uso mi propio Renderer.
+        if (indicadorRenderer == null)
+        {
+            indicadorRenderer = GetComponent<Renderer>();
+        }
+    }
+
+    protected virtual void Start()
     {
         ActualizarColor();
     }
 
-    private void Update()
+    protected virtual void Update()
     {
         Mover();
         RevisarSalidaDeEscena();
     }
 
-    private void Mover()
+    protected virtual void Mover()
     {
         float velocidad = GameManager.Instancia.Velocidad;
-        transform.Translate(Vector3.back * velocidad * Time.deltaTime);
+        transform.Translate(Vector3.back * velocidad * Time.deltaTime, Space.World);
     }
 
     private void RevisarSalidaDeEscena()
@@ -56,8 +70,6 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
         }
     }
 
-    // Cambia la polaridad de forma controlada y repinta el objeto.
-    // La usa el Spawner al generar cada objeto con polaridad al azar.
     public void EstablecerPolaridad(Polaridad nueva)
     {
         polaridad = nueva;
@@ -66,13 +78,19 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
 
     private void ActualizarColor()
     {
+        // Si no hay nada que pintar, no hacemos nada (evita errores en las naves).
+        if (indicadorRenderer == null)
+        {
+            return;
+        }
+
         if (polaridad == Polaridad.Cyan)
         {
-            miRenderer.material.color = Color.cyan;
+            indicadorRenderer.material.color = Color.cyan;
         }
         else
         {
-            miRenderer.material.color = Color.magenta;
+            indicadorRenderer.material.color = Color.magenta;
         }
     }
 
@@ -93,7 +111,7 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
 
     protected abstract void Reaccionar(bool coincide, Player jugador);
 
-    public void Activar()
+    public virtual void Activar()
     {
         gameObject.SetActive(true);
         ActualizarColor();

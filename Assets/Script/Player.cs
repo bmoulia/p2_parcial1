@@ -1,24 +1,23 @@
 using UnityEngine;
 
 // ============================================================
-// Player.cs
-// Responsabilidad: manejar al jugador -> movimiento lateral (A/D),
-// cambio de polaridad (Space) y color segun la polaridad actual.
-// Concepto del parcial que toca: ENCAPSULAMIENTO
-// (campo privado + propiedad publica de solo lectura).
+// Player.cs  (ACTUALIZADO)
+// Cambio: el jugador ahora DISPARA con click izquierdo. Cada disparo
+// sale de su polaridad actual y se lo pide al pool. Hay un tiempo de
+// espera entre tiros para que no se pueda disparar cada frame.
 // ============================================================
 public class Player : MonoBehaviour
 {
-    // --- Campos configurables desde el Inspector ---
     [SerializeField] private float velocidadMovimiento = 8f;
     [SerializeField] private float limiteX = 3.5f;
+    [SerializeField] private float limiteZAdelante = 4f;
+    [SerializeField] private float limiteZAtras = -2f;
+    [SerializeField] private float tiempoEntreDisparos = 0.25f;
 
-    // --- Campos privados internos ---
     private Polaridad polaridadActual;
     private Renderer miRenderer;
+    private float tiempoDesdeUltimoDisparo;
 
-    // --- Propiedad publica: los demas scripts LEEN mi polaridad,
-    //     pero no pueden cambiarla (solo get). ---
     public Polaridad PolaridadActual
     {
         get { return polaridadActual; }
@@ -26,13 +25,11 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        // Guardamos la referencia al Renderer una sola vez.
         miRenderer = GetComponent<Renderer>();
     }
 
     private void Start()
     {
-        // El jugador arranca en Cyan.
         polaridadActual = Polaridad.Cyan;
         ActualizarColor();
     }
@@ -41,15 +38,17 @@ public class Player : MonoBehaviour
     {
         Mover();
         LeerCambioDePolaridad();
+        LeerDisparo();
     }
 
-    // Movimiento lateral con A/D (o flechas izquierda/derecha).
     private void Mover()
     {
         float ejeHorizontal = Input.GetAxisRaw("Horizontal");
         transform.Translate(Vector3.right * ejeHorizontal * velocidadMovimiento * Time.deltaTime);
 
-        // Que el jugador no se salga de la pista.
+        float ejeVertical = Input.GetAxisRaw("Vertical");
+        transform.Translate(Vector3.forward * ejeVertical * velocidadMovimiento * Time.deltaTime);
+
         Vector3 posicion = transform.position;
         if (posicion.x > limiteX)
         {
@@ -59,16 +58,53 @@ public class Player : MonoBehaviour
         {
             posicion.x = -limiteX;
         }
+        if (posicion.z > limiteZAdelante)
+        {
+            posicion.z = limiteZAdelante;
+        }
+        if (posicion.z < limiteZAtras)
+        {
+            posicion.z = limiteZAtras;
+        }
         transform.position = posicion;
     }
 
-    // Detecta si se apreto Space para alternar la polaridad.
     private void LeerCambioDePolaridad()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             CambiarPolaridad();
         }
+    }
+
+    // Lee el click izquierdo para disparar, respetando el tiempo de espera.
+    private void LeerDisparo()
+    {
+        // Solo se dispara mientras se esta jugando.
+        if (GameManager.Instancia.EstadoActual != EstadoJuego.Jugando)
+        {
+            return;
+        }
+
+        tiempoDesdeUltimoDisparo = tiempoDesdeUltimoDisparo + Time.deltaTime;
+
+        if (Input.GetMouseButtonDown(0) && tiempoDesdeUltimoDisparo >= tiempoEntreDisparos)
+        {
+            tiempoDesdeUltimoDisparo = 0f;
+            Disparar();
+        }
+    }
+
+    private void Disparar()
+    {
+        // Pedimos un disparo al pool (reciclado, no Instantiate).
+        WorldObject disparo = ObjectPool.Instancia.Obtener(TipoObjeto.DisparoJugador);
+
+        // Lo ubicamos un poco adelante del jugador para que no se solape con el.
+        disparo.transform.position = transform.position + new Vector3(0f, 0f, 1f);
+
+        // El disparo sale de la MISMA polaridad que el jugador en este instante.
+        disparo.EstablecerPolaridad(polaridadActual);
     }
 
     private void CambiarPolaridad()
@@ -84,7 +120,6 @@ public class Player : MonoBehaviour
         ActualizarColor();
     }
 
-    // Pinta el cubo del color de su polaridad actual.
     private void ActualizarColor()
     {
         if (polaridadActual == Polaridad.Cyan)

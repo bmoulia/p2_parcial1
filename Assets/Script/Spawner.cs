@@ -1,29 +1,24 @@
 using UnityEngine;
 
 // ============================================================
-// Spawner.cs
-// Genera objetos en la pista cada cierto tiempo, pidiendoselos
-// al ObjectPool (no usa Instantiate: recicla). Elige al azar el
-// tipo (obstaculo/coleccionable), el carril (X) y la polaridad.
-// Solo genera mientras el juego esta en estado Jugando.
-// Responsabilidad unica: decidir QUE, DONDE y CUANDO aparece algo.
-// El ciclo de vida del objeto es cosa del pool, no del spawner.
+// Spawner.cs  (ACTUALIZADO)
+// Cambio: DIFICULTAD PROGRESIVA. El intervalo entre spawns ya no es
+// fijo: arranca lento y se va achicando segun la distancia recorrida
+// (que leemos del GameManager), hasta un minimo. Ademas, cuanto mas
+// lejos llegas, mas probable es que salga una nave enemiga.
 // ============================================================
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private float intervaloSpawn = 1.5f;
+    [SerializeField] private float intervaloInicial = 1.8f; // al empezar (lento)
+    [SerializeField] private float intervaloMinimo = 0.6f;  // lo mas rapido posible
     [SerializeField] private float zSpawn = 40f;
 
-    // Carriles fijos donde pueden aparecer los objetos.
-    // (Es un arreglo simple: NO cuenta como estructura del parcial,
-    //  solo organiza las 3 posiciones posibles en X.)
     private float[] carriles = { -2.5f, 0f, 2.5f };
 
     private float tiempoDesdeUltimoSpawn;
 
     private void Update()
     {
-        // Solo generamos si el juego esta en curso.
         if (GameManager.Instancia.EstadoActual != EstadoJuego.Jugando)
         {
             return;
@@ -31,11 +26,31 @@ public class Spawner : MonoBehaviour
 
         tiempoDesdeUltimoSpawn = tiempoDesdeUltimoSpawn + Time.deltaTime;
 
-        if (tiempoDesdeUltimoSpawn >= intervaloSpawn)
+        // El intervalo actual depende de cuanto avanzaste.
+        float intervaloActual = CalcularIntervalo();
+
+        if (tiempoDesdeUltimoSpawn >= intervaloActual)
         {
             tiempoDesdeUltimoSpawn = 0f;
             Generar();
         }
+    }
+
+    // Devuelve el intervalo segun el progreso (mas avance = mas rapido).
+    private float CalcularIntervalo()
+    {
+        // Progreso de 0 (arranque) a 1 (llegaste al objetivo).
+        float progreso = GameManager.Instancia.DistanciaRecorrida / GameManager.Instancia.DistanciaObjetivo;
+
+        // Por las dudas, lo dejamos entre 0 y 1.
+        if (progreso > 1f)
+        {
+            progreso = 1f;
+        }
+
+        // Interpolamos: en progreso 0 devuelve el inicial, en 1 el minimo.
+        float intervalo = Mathf.Lerp(intervaloInicial, intervaloMinimo, progreso);
+        return intervalo;
     }
 
     private void Generar()
@@ -44,26 +59,37 @@ public class Spawner : MonoBehaviour
         Polaridad polaridad = ElegirPolaridad();
         float x = ElegirCarril();
 
-        // Le pedimos el objeto al pool (reciclado, no creado de cero).
         WorldObject objeto = ObjectPool.Instancia.Obtener(tipo);
-
-        // Lo ubicamos al fondo de la pista, en el carril elegido.
         objeto.transform.position = new Vector3(x, 0.5f, zSpawn);
-
-        // Le asignamos la polaridad al azar (esto tambien lo repinta).
         objeto.EstablecerPolaridad(polaridad);
     }
 
     private TipoObjeto ElegirTipo()
     {
-        int azar = Random.Range(0, 2); // devuelve 0 o 1
-        if (azar == 0)
+        float progreso = GameManager.Instancia.DistanciaRecorrida / GameManager.Instancia.DistanciaObjetivo;
+
+        // La probabilidad de nave enemiga sube con el avance:
+        // arranca en 20% y llega hasta ~60% al final.
+        float probabilidadNave = Mathf.Lerp(0.2f, 0.6f, progreso);
+
+        float azar = Random.value; // numero al azar entre 0 y 1
+
+        if (azar < probabilidadNave)
         {
-            return TipoObjeto.Obstaculo;
+            return TipoObjeto.NaveEnemiga;
         }
         else
         {
-            return TipoObjeto.Coleccionable;
+            // El resto se reparte mitad y mitad entre obstaculo y coleccionable.
+            float azar2 = Random.value;
+            if (azar2 < 0.5f)
+            {
+                return TipoObjeto.Obstaculo;
+            }
+            else
+            {
+                return TipoObjeto.Coleccionable;
+            }
         }
     }
 
@@ -82,7 +108,7 @@ public class Spawner : MonoBehaviour
 
     private float ElegirCarril()
     {
-        int indice = Random.Range(0, carriles.Length); // 0, 1 o 2
+        int indice = Random.Range(0, carriles.Length);
         return carriles[indice];
     }
 }

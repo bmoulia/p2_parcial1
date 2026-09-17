@@ -1,13 +1,14 @@
-using System;         // para poder usar "event Action" (los eventos del Observer)
+using System;                        // para "event Action" (Observer)
 using UnityEngine;
-using UnityEngine.SceneManagement; // para recargar la escena al reiniciar
+using UnityEngine.SceneManagement;   // para recargar la escena al reiniciar
 
 // ============================================================
-// GameManager.cs
+// GameManager.cs  (COMPLETO)
 // El arbitro del juego. Responsabilidades:
 //  - ser unico y accesible desde cualquier lado (SINGLETON)
 //  - controlar la fase actual con enum + switch
 //  - tener la velocidad global del mundo
+//  - guardar la dificultad elegida en el menu
 //  - llevar la distancia (victoria) y el puntaje
 //  - avisar a los interesados cuando algo cambia (OBSERVER)
 // Patrones del parcial: SINGLETON y OBSERVER.
@@ -19,10 +20,11 @@ public class GameManager : MonoBehaviour
 
     // --- Configurables desde el Inspector ---
     [SerializeField] private float velocidad = 10f;
-    [SerializeField] private float distanciaObjetivo = 50f;
+    [SerializeField] private float distanciaObjetivo = 250f;
 
     // --- Estado interno (privado = encapsulado) ---
     private EstadoJuego estadoActual;
+    private Dificultad dificultadActual = Dificultad.Media; // por defecto, media
     private float distanciaRecorrida;
     private int puntaje;
 
@@ -34,6 +36,10 @@ public class GameManager : MonoBehaviour
     public EstadoJuego EstadoActual
     {
         get { return estadoActual; }
+    }
+    public Dificultad DificultadActual
+    {
+        get { return dificultadActual; }
     }
     public float DistanciaRecorrida
     {
@@ -69,7 +75,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Arrancamos en el menu de inicio. El boton "Jugar" llamara a IniciarJuego().
+        // Arrancamos en el menu de inicio. Los botones de dificultad
+        // configuran la partida y llaman a IniciarJuego().
         CambiarEstado(EstadoJuego.Menu);
     }
 
@@ -106,10 +113,10 @@ public class GameManager : MonoBehaviour
         switch (estadoActual)
         {
             case EstadoJuego.Menu:
-                Time.timeScale = 0f; // juego frenado en el menu
+                Time.timeScale = 0f;
                 break;
             case EstadoJuego.Jugando:
-                Time.timeScale = 1f; // el mundo se mueve
+                Time.timeScale = 1f;
                 break;
             case EstadoJuego.Victoria:
                 Time.timeScale = 0f;
@@ -134,7 +141,7 @@ public class GameManager : MonoBehaviour
         CambiarEstado(EstadoJuego.Derrota);
     }
 
-    // La llaman los coleccionables al juntarse.
+    // La llaman los coleccionables al juntarse y el disparo al destruir.
     public void SumarPuntos(int cantidad)
     {
         puntaje = puntaje + cantidad;
@@ -144,8 +151,29 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // Configura la partida segun la dificultad elegida en el menu.
+    // La dificultad se siente por la CANTIDAD de objetos (lo maneja el
+    // Spawner leyendo DificultadActual). Aca solo guardamos el nivel y
+    // ajustamos la distancia objetivo.
+    public void ConfigurarDificultad(Dificultad dificultad)
+    {
+        dificultadActual = dificultad;
+
+        if (dificultad == Dificultad.Normal)
+        {
+            distanciaObjetivo = 150f;
+        }
+        else if (dificultad == Dificultad.Media)
+        {
+            distanciaObjetivo = 250f;
+        }
+        else // Dificil
+        {
+            distanciaObjetivo = 400f;
+        }
+    }
+
     // Reinicia los valores y arranca la partida.
-    // La va a usar el boton "Jugar" del menu.
     public void IniciarJuego()
     {
         distanciaRecorrida = 0f;
@@ -153,9 +181,7 @@ public class GameManager : MonoBehaviour
         CambiarEstado(EstadoJuego.Jugando);
     }
 
-        // Reinicia la partida recargando la escena completa.
-    // Es la forma mas simple y segura de dejar todo en cero: pool,
-    // objetos activos, posiciones, todo vuelve al estado inicial.
+    // Reinicia la partida recargando la escena completa.
     public void ReiniciarJuego()
     {
         Time.timeScale = 1f; // destrabamos el tiempo antes de recargar

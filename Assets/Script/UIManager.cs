@@ -1,15 +1,10 @@
 using UnityEngine;
-using TMPro; // para los textos TextMeshPro desde codigo
+using TMPro;
 
 // ============================================================
 // UIManager.cs  (COMPLETO)
-// Maneja TODAS las pantallas y el HUD. Se suscribe a los eventos
-// del GameManager (patron OBSERVER):
-//  - OnEstadoCambiado    -> muestra menu / HUD / victoria / derrota
-//  - OnDistanciaCambiada -> actualiza el texto de distancia
-//  - OnPuntajeCambiado   -> actualiza el texto de puntaje
-// El GameManager avisa; el UIManager reacciona. Desacople total:
-// el GameManager no sabe que la UI existe.
+// Maneja las pantallas y el HUD. Se suscribe a los eventos del
+// GameManager (OBSERVER). Incluye los botones de dificultad del menu.
 // ============================================================
 public class UIManager : MonoBehaviour
 {
@@ -26,12 +21,10 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         // OBSERVER: nos suscribimos a los tres eventos.
-        // Lo hacemos en Start para asegurarnos de que el GameManager ya exista.
         GameManager.Instancia.OnEstadoCambiado += ActualizarPantallas;
         GameManager.Instancia.OnDistanciaCambiada += ActualizarDistancia;
         GameManager.Instancia.OnPuntajeCambiado += ActualizarPuntaje;
 
-        // Mostramos el estado inicial correcto.
         ActualizarPantallas();
         ActualizarDistancia();
         ActualizarPuntaje();
@@ -39,7 +32,6 @@ public class UIManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Nos desuscribimos al destruirse (evita errores al recargar la escena).
         if (GameManager.Instancia != null)
         {
             GameManager.Instancia.OnEstadoCambiado -= ActualizarPantallas;
@@ -48,18 +40,15 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Muestra el panel correcto segun el estado del juego.
     private void ActualizarPantallas()
     {
         EstadoJuego estado = GameManager.Instancia.EstadoActual;
 
-        // Apagamos todo primero.
         panelMenu.SetActive(false);
         panelHUD.SetActive(false);
         panelVictoria.SetActive(false);
         panelDerrota.SetActive(false);
 
-        // Prendemos el que corresponde.
         if (estado == EstadoJuego.Menu)
         {
             panelMenu.SetActive(true);
@@ -90,12 +79,26 @@ public class UIManager : MonoBehaviour
         textoPuntaje.text = "Puntaje: " + GameManager.Instancia.Puntaje;
     }
 
-    // --- Botones ---
-    public void BotonJugar()
+    // --- Botones de dificultad (menu) ---
+    public void BotonDificultadNormal()
     {
+        GameManager.Instancia.ConfigurarDificultad(Dificultad.Normal);
         GameManager.Instancia.IniciarJuego();
     }
 
+    public void BotonDificultadMedia()
+    {
+        GameManager.Instancia.ConfigurarDificultad(Dificultad.Media);
+        GameManager.Instancia.IniciarJuego();
+    }
+
+    public void BotonDificultadDificil()
+    {
+        GameManager.Instancia.ConfigurarDificultad(Dificultad.Dificil);
+        GameManager.Instancia.IniciarJuego();
+    }
+
+    // --- Boton de reiniciar (victoria / derrota) ---
     public void BotonReiniciar()
     {
         GameManager.Instancia.ReiniciarJuego();

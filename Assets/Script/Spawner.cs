@@ -2,19 +2,21 @@ using UnityEngine;
 
 // ============================================================
 // Spawner.cs  (ACTUALIZADO)
-// Cambio: DIFICULTAD PROGRESIVA. El intervalo entre spawns ya no es
-// fijo: arranca lento y se va achicando segun la distancia recorrida
-// (que leemos del GameManager), hasta un minimo. Ademas, cuanto mas
-// lejos llegas, mas probable es que salga una nave enemiga.
+// Cambio: la dificultad (elegida en el menu, guardada en el GameManager)
+// ahora define la CANTIDAD de objetos y la proporcion de enemigos.
+// Mas dificultad = aparecen mas seguido y hay mas naves enemigas.
+// La velocidad del mundo NO cambia con la dificultad.
 // ============================================================
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private float intervaloInicial = 1.8f; // al empezar (lento)
-    [SerializeField] private float intervaloMinimo = 0.6f;  // lo mas rapido posible
     [SerializeField] private float zSpawn = 40f;
 
-    private float[] carriles = { -2.5f, 0f, 2.5f };
+    // Intervalos base (dificultad media). Los otros niveles los derivamos
+    // multiplicando estos valores.
+    [SerializeField] private float intervaloInicialBase = 1.8f;
+    [SerializeField] private float intervaloMinimoBase = 0.6f;
 
+    private float[] carriles = { -2.5f, 0f, 2.5f };
     private float tiempoDesdeUltimoSpawn;
 
     private void Update()
@@ -26,7 +28,6 @@ public class Spawner : MonoBehaviour
 
         tiempoDesdeUltimoSpawn = tiempoDesdeUltimoSpawn + Time.deltaTime;
 
-        // El intervalo actual depende de cuanto avanzaste.
         float intervaloActual = CalcularIntervalo();
 
         if (tiempoDesdeUltimoSpawn >= intervaloActual)
@@ -36,20 +37,39 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    // Devuelve el intervalo segun el progreso (mas avance = mas rapido).
+    // Devuelve un multiplicador de cantidad segun la dificultad.
+    // Menor multiplicador = intervalos mas cortos = MAS objetos.
+    private float MultiplicadorIntervalo()
+    {
+        Dificultad dificultad = GameManager.Instancia.DificultadActual;
+
+        if (dificultad == Dificultad.Normal)
+        {
+            return 1.4f; // intervalos mas largos -> menos objetos
+        }
+        else if (dificultad == Dificultad.Media)
+        {
+            return 1f;   // valores base
+        }
+        else // Dificil
+        {
+            return 0.6f; // intervalos mas cortos -> mas objetos
+        }
+    }
+
     private float CalcularIntervalo()
     {
-        // Progreso de 0 (arranque) a 1 (llegaste al objetivo).
         float progreso = GameManager.Instancia.DistanciaRecorrida / GameManager.Instancia.DistanciaObjetivo;
-
-        // Por las dudas, lo dejamos entre 0 y 1.
         if (progreso > 1f)
         {
             progreso = 1f;
         }
 
-        // Interpolamos: en progreso 0 devuelve el inicial, en 1 el minimo.
-        float intervalo = Mathf.Lerp(intervaloInicial, intervaloMinimo, progreso);
+        // Interpolamos entre inicial y minimo segun el progreso...
+        float intervalo = Mathf.Lerp(intervaloInicialBase, intervaloMinimoBase, progreso);
+
+        // ...y lo escalamos segun la dificultad elegida.
+        intervalo = intervalo * MultiplicadorIntervalo();
         return intervalo;
     }
 
@@ -68,11 +88,22 @@ public class Spawner : MonoBehaviour
     {
         float progreso = GameManager.Instancia.DistanciaRecorrida / GameManager.Instancia.DistanciaObjetivo;
 
-        // La probabilidad de nave enemiga sube con el avance:
-        // arranca en 20% y llega hasta ~60% al final.
+        // Probabilidad base de nave segun el progreso.
         float probabilidadNave = Mathf.Lerp(0.2f, 0.6f, progreso);
 
-        float azar = Random.value; // numero al azar entre 0 y 1
+        // La dificultad suma probabilidad de nave enemiga.
+        Dificultad dificultad = GameManager.Instancia.DificultadActual;
+        if (dificultad == Dificultad.Normal)
+        {
+            probabilidadNave = probabilidadNave - 0.1f;
+        }
+        else if (dificultad == Dificultad.Dificil)
+        {
+            probabilidadNave = probabilidadNave + 0.2f;
+        }
+        // En Media queda como esta.
+
+        float azar = Random.value;
 
         if (azar < probabilidadNave)
         {
@@ -80,7 +111,6 @@ public class Spawner : MonoBehaviour
         }
         else
         {
-            // El resto se reparte mitad y mitad entre obstaculo y coleccionable.
             float azar2 = Random.value;
             if (azar2 < 0.5f)
             {

@@ -1,34 +1,19 @@
-using System;                        // para "event Action" (Observer)
+using System; 
 using UnityEngine;
-using UnityEngine.SceneManagement;   // para recargar la escena al reiniciar
+using UnityEngine.SceneManagement; 
 
-// ============================================================
-// GameManager.cs  (COMPLETO)
-// El arbitro del juego. Responsabilidades:
-//  - ser unico y accesible desde cualquier lado (SINGLETON)
-//  - controlar la fase actual con enum + switch
-//  - tener la velocidad global del mundo
-//  - guardar la dificultad elegida en el menu
-//  - llevar la distancia (victoria) y el puntaje
-//  - avisar a los interesados cuando algo cambia (OBSERVER)
-// Patrones del parcial: SINGLETON y OBSERVER.
-// ============================================================
 public class GameManager : MonoBehaviour
 {
-    // --- SINGLETON: una unica instancia global ---
     public static GameManager Instancia;
 
-    // --- Configurables desde el Inspector ---
     [SerializeField] private float velocidad = 10f;
     [SerializeField] private float distanciaObjetivo = 250f;
 
-    // --- Estado interno (privado = encapsulado) ---
     private EstadoJuego estadoActual;
-    private Dificultad dificultadActual = Dificultad.Media; // por defecto, media
+    private Dificultad dificultadActual = Dificultad.Media; 
     private float distanciaRecorrida;
     private int puntaje;
 
-    // --- Propiedades: se leen de afuera, no se escriben ---
     public float Velocidad
     {
         get { return velocidad; }
@@ -53,16 +38,13 @@ public class GameManager : MonoBehaviour
     {
         get { return puntaje; }
     }
-
-    // --- EVENTOS (OBSERVER): el GameManager avisa, otros escuchan ---
     public event Action OnEstadoCambiado;
     public event Action OnDistanciaCambiada;
     public event Action OnPuntajeCambiado;
 
     private void Awake()
     {
-        // Singleton: si no hay instancia, esta es LA instancia.
-        // Si ya habia otra, esta sobra y se destruye.
+    
         if (Instancia == null)
         {
             Instancia = this;
@@ -76,7 +58,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         // Arrancamos en el menu de inicio. Los botones de dificultad
-        // configuran la partida y llaman a IniciarJuego().
+        // configuran la partida y llaman a IniciarJuego()
         CambiarEstado(EstadoJuego.Menu);
     }
 
@@ -98,14 +80,13 @@ public class GameManager : MonoBehaviour
             OnDistanciaCambiada();
         }
 
-        // Condicion de VICTORIA.
+        // Condicion de Victoria.
         if (distanciaRecorrida >= distanciaObjetivo)
         {
             CambiarEstado(EstadoJuego.Victoria);
         }
     }
 
-    // El control central de fases: enum + switch.
     public void CambiarEstado(EstadoJuego nuevoEstado)
     {
         estadoActual = nuevoEstado;
@@ -120,7 +101,7 @@ public class GameManager : MonoBehaviour
                 break;
             case EstadoJuego.Victoria:
                 Time.timeScale = 0f;
-                Debug.Log("VICTORIA! Llegaste a la meta");
+                Debug.Log("GANASTE! Llegaste a la meta");
                 break;
             case EstadoJuego.Derrota:
                 Time.timeScale = 0f;
@@ -128,20 +109,17 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // Aviso a los observadores que el estado cambio.
+        // Cambio el estado.
         if (OnEstadoCambiado != null)
         {
             OnEstadoCambiado();
         }
     }
 
-    // La llama el obstaculo cuando chocas con polaridad distinta.
     public void JugadorMurio()
     {
         CambiarEstado(EstadoJuego.Derrota);
     }
-
-    // La llaman los coleccionables al juntarse y el disparo al destruir.
     public void SumarPuntos(int cantidad)
     {
         puntaje = puntaje + cantidad;
@@ -151,10 +129,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Configura la partida segun la dificultad elegida en el menu.
-    // La dificultad se siente por la CANTIDAD de objetos (lo maneja el
-    // Spawner leyendo DificultadActual). Aca solo guardamos el nivel y
-    // ajustamos la distancia objetivo.
+    // Configuro la partida segun la dificultad elegida en el menu.
     public void ConfigurarDificultad(Dificultad dificultad)
     {
         dificultadActual = dificultad;
@@ -184,7 +159,7 @@ public class GameManager : MonoBehaviour
     // Reinicia la partida recargando la escena completa.
     public void ReiniciarJuego()
     {
-        Time.timeScale = 1f; // destrabamos el tiempo antes de recargar
+        Time.timeScale = 1f;
         Scene escenaActual = SceneManager.GetActiveScene();
         SceneManager.LoadScene(escenaActual.name);
     }

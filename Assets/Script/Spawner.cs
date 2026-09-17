@@ -1,18 +1,10 @@
 using UnityEngine;
 
-// ============================================================
-// Spawner.cs  (ACTUALIZADO)
-// Cambio: la dificultad (elegida en el menu, guardada en el GameManager)
-// ahora define la CANTIDAD de objetos y la proporcion de enemigos.
-// Mas dificultad = aparecen mas seguido y hay mas naves enemigas.
-// La velocidad del mundo NO cambia con la dificultad.
-// ============================================================
 public class Spawner : MonoBehaviour
 {
     [SerializeField] private float zSpawn = 40f;
 
-    // Intervalos base (dificultad media). Los otros niveles los derivamos
-    // multiplicando estos valores.
+
     [SerializeField] private float intervaloInicialBase = 1.8f;
     [SerializeField] private float intervaloMinimoBase = 0.6f;
 
@@ -37,15 +29,14 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    // Devuelve un multiplicador de cantidad segun la dificultad.
-    // Menor multiplicador = intervalos mas cortos = MAS objetos.
+    // Devuelve un multiplicador de cantidad segun la dificultad
     private float MultiplicadorIntervalo()
     {
         Dificultad dificultad = GameManager.Instancia.DificultadActual;
 
         if (dificultad == Dificultad.Normal)
         {
-            return 1.4f; // intervalos mas largos -> menos objetos
+            return 1.4f; // intervalos mas largos
         }
         else if (dificultad == Dificultad.Media)
         {
@@ -53,7 +44,7 @@ public class Spawner : MonoBehaviour
         }
         else // Dificil
         {
-            return 0.6f; // intervalos mas cortos -> mas objetos
+            return 0.6f; // intervalos mas cortos
         }
     }
 
@@ -65,10 +56,10 @@ public class Spawner : MonoBehaviour
             progreso = 1f;
         }
 
-        // Interpolamos entre inicial y minimo segun el progreso...
+        // Interpolamos entre inicial y minimo segun el progreso
         float intervalo = Mathf.Lerp(intervaloInicialBase, intervaloMinimoBase, progreso);
 
-        // ...y lo escalamos segun la dificultad elegida.
+        //escalamos segun la dificultad elegida.
         intervalo = intervalo * MultiplicadorIntervalo();
         return intervalo;
     }

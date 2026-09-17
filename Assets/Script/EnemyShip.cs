@@ -1,11 +1,5 @@
 using UnityEngine;
 
-// ============================================================
-// EnemyShip.cs  (ACTUALIZADO)
-// Cambio: el intervalo de disparo ahora es ALEATORIO dentro de un
-// rango [min, max]. Cada nave elige su propia cadencia y la resortea
-// tras cada disparo, asi no disparan todas sincronizadas.
-// ============================================================
 public class EnemyShip : Obstacle
 {
     [SerializeField] private float intervaloMinimo = 0.8f;
@@ -13,7 +7,7 @@ public class EnemyShip : Obstacle
     [SerializeField] private Transform[] puntosDisparo;
 
     private float tiempoDesdeUltimoDisparo;
-    private float intervaloActual; // el sorteado para el proximo disparo
+    private float intervaloActual;
     private Transform jugadorTransform;
 
     protected override void Update()
@@ -57,7 +51,7 @@ public class EnemyShip : Obstacle
             return;
         }
 
-        // Si ya paso al jugador, no dispara mas.
+        // Si ya paso al jugador no dispara mas.
         if (transform.position.z < jugadorTransform.position.z)
         {
             return;
@@ -79,7 +73,7 @@ public class EnemyShip : Obstacle
     public override void Activar()
     {
         base.Activar();
-        // Arranca lista para disparar apenas aparece, con una cadencia sorteada.
+        // Arranca lista para disparar apenas aparece con una cadencia sorteada.
         SortearIntervalo();
         tiempoDesdeUltimoDisparo = intervaloActual;
     }

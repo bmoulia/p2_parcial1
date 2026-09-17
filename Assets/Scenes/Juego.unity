@@ -5749,9 +5749,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e52bbf3cb3a315949acfa206fe085f03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Spawner
-  intervaloInicial: 1.8
-  intervaloMinimo: 0.6
   zSpawn: 40
+  intervaloInicialBase: 1.8
+  intervaloMinimoBase: 0.6
 --- !u!4 &800657266
 Transform:
   m_ObjectHideFlags: 0

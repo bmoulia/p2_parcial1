@@ -1,9 +1,5 @@
 using UnityEngine;
 
-// ============================================================
-// Collectible.cs  (ACTUALIZADO)
-// Cambio: al recolectarse, vuelve al pool en vez de solo apagarse.
-// ============================================================
 public class Collectible : WorldObject, ICollectible
 {
     [SerializeField] private int valor = 1;

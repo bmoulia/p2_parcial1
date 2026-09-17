@@ -1,20 +1,10 @@
 using UnityEngine;
 
-// ============================================================
-// WorldObject.cs  (ACTUALIZADO)
-// Cambios:
-//  1) indicadorRenderer: un Renderer opcional que se pinta con el
-//     color de la polaridad. Si queda vacio en el Inspector, se usa
-//     el Renderer propio (asi los cubos siguen andando igual, y las
-//     naves importadas pintan un cubito hijo como indicador).
-//  2) Activar() pasa a virtual: la nave enemiga lo pisa para resetear
-//     su temporizador de disparo cada vez que sale del pool.
-// ============================================================
 public abstract class WorldObject : MonoBehaviour, IPoolable
 {
     [SerializeField] private Polaridad polaridad;
     [SerializeField] private float zDeReciclado = -10f;
-    [SerializeField] private Renderer indicadorRenderer; // opcional (vacio = uso el mio)
+    [SerializeField] private Renderer indicadorRenderer; 
 
     private TipoObjeto tipo;
 
@@ -38,7 +28,7 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
 
     protected virtual void Awake()
     {
-        // Si no asignaron un indicador en el Inspector, uso mi propio Renderer.
+        
         if (indicadorRenderer == null)
         {
             indicadorRenderer = GetComponent<Renderer>();
@@ -78,7 +68,6 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
 
     private void ActualizarColor()
     {
-        // Si no hay nada que pintar, no hacemos nada (evita errores en las naves).
         if (indicadorRenderer == null)
         {
             return;

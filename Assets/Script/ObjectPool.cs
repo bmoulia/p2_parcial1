@@ -1,35 +1,23 @@
-using System.Collections.Generic; // NECESARIO para List, Queue y Dictionary
+using System.Collections.Generic; // List, Queue y Dictionary
 using UnityEngine;
 
-// ============================================================
-// ObjectPool.cs
-// Patron OBJECT POOL: reutiliza objetos en vez de crear/destruir.
-// Es SINGLETON tambien (uno solo, accesible desde el Spawner).
-// Estructuras del parcial (las 3 viven aca):
-//  - Dictionary<TipoObjeto, Queue<WorldObject>> -> cola por tipo
-//  - Queue<WorldObject>                         -> objetos libres
-//  - List<WorldObject>                          -> objetos activos
-// ============================================================
+
 public class ObjectPool : MonoBehaviour
 {
-    // --- SINGLETON ---
     public static ObjectPool Instancia;
 
-    // --- Prefabs a reciclar (se asignan en el Inspector) ---
     [SerializeField] private WorldObject prefabObstaculo;
     [SerializeField] private WorldObject prefabColeccionable;
     [SerializeField] private WorldObject prefabProyectil;
     [SerializeField] private WorldObject[] prefabsNaveEnemiga;
     [SerializeField] private WorldObject prefabDisparoJugador;
     [SerializeField] private int cantidadInicial = 5;
-
-    // --- Las 3 estructuras ---
     private Dictionary<TipoObjeto, Queue<WorldObject>> objetosLibres;
     private List<WorldObject> objetosActivos;
 
     private void Awake()
     {
-        // Singleton.
+        // Singleton
         if (Instancia == null)
         {
             Instancia = this;
@@ -39,7 +27,7 @@ public class ObjectPool : MonoBehaviour
             Destroy(gameObject);
         }
 
-        // Creamos las estructuras vacias.
+        // Creo las estructuras vacias
         objetosLibres = new Dictionary<TipoObjeto, Queue<WorldObject>>();
         objetosActivos = new List<WorldObject>();
     }
@@ -49,7 +37,7 @@ public class ObjectPool : MonoBehaviour
         Precargar();
     }
 
-    // Crea una cantidad inicial de cada tipo, apagados y listos.
+    // Precargo cada tipo
     private void Precargar()
     {
         CrearColaParaTipo(TipoObjeto.Obstaculo);
@@ -113,7 +101,7 @@ public class ObjectPool : MonoBehaviour
         }
     }
 
-    // SACA un objeto del tipo pedido (lo usa el Spawner).
+    // aca un objeto del tipo pedido que despues lo manda al spawner
     public WorldObject Obtener(TipoObjeto tipo)
     {
         Queue<WorldObject> cola = objetosLibres[tipo];
@@ -125,7 +113,7 @@ public class ObjectPool : MonoBehaviour
         }
         else
         {
-            // Si no quedan libres, el pool crece: crea uno nuevo.
+            // Si no quedan, el pool crece y creo uno nuevo.
             objeto = CrearNuevo(tipo);
         }
 
@@ -133,8 +121,6 @@ public class ObjectPool : MonoBehaviour
         objeto.Activar();
         return objeto;
     }
-
-    // DEVUELVE un objeto al pool cuando sale de escena o se junta.
     public void Devolver(WorldObject objeto)
     {
         objetosActivos.Remove(objeto);
@@ -143,11 +129,8 @@ public class ObjectPool : MonoBehaviour
         Queue<WorldObject> cola = objetosLibres[objeto.Tipo];
         cola.Enqueue(objeto);
     }
-
-    // Devuelve TODOS los activos de golpe (para limpiar al reiniciar).
     public void DevolverTodos()
     {
-        // Copiamos la lista porque Devolver() la va modificando.
         List<WorldObject> copia = new List<WorldObject>(objetosActivos);
 
         foreach (WorldObject objeto in copia)

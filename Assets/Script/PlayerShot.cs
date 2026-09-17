@@ -1,12 +1,5 @@
 using UnityEngine;
 
-// ============================================================
-// PlayerShot.cs  (ACTUALIZADO)
-// Cambio: ahora detecta impactos. Cuando toca un WorldObject que es
-// destruible, aplica la REGLA B: si la polaridad del objeto es la
-// OPUESTA a la del disparo, lo destruye (ambos vuelven al pool).
-// Si es del mismo color, el disparo lo atraviesa sin efecto.
-// ============================================================
 public class PlayerShot : WorldObject
 {
     [SerializeField] private float velocidadDisparo = 25f;
@@ -14,12 +7,12 @@ public class PlayerShot : WorldObject
 
     public override bool EsDestruible
     {
-        get { return false; } // al disparo del jugador no se le dispara
+        get { return false; }
     }
 
     protected override void Reaccionar(bool coincide, Player jugador)
     {
-        // No hace nada: el disparo no reacciona al jugador.
+        
     }
 
     protected override void Mover()
@@ -42,28 +35,26 @@ public class PlayerShot : WorldObject
     {
         WorldObject objeto = other.GetComponent<WorldObject>();
 
-        // Si lo que tocamos no es un WorldObject, ignoramos.
+        // Si lo que tocamos no es un WorldObject, ignoro
         if (objeto == null)
         {
             return;
         }
 
-        // Solo le pega a cosas destruibles (obstaculos, naves).
+        // Solo le pega a cosas que puedo destruir.
         if (objeto.EsDestruible == false)
         {
             return;
         }
 
-        // REGLA B: se destruye solo si es del color OPUESTO al disparo.
+
         if (objeto.Polaridad != this.Polaridad)
         {
-            // Destruimos el objeto enemigo...
+            // Destruimos el objeto enemigo
             ObjectPool.Instancia.Devolver(objeto);
-            // ...y sumamos puntos por eliminarlo.
             GameManager.Instancia.SumarPuntos(1);
-            // ...y el disparo tambien se consume.
             ObjectPool.Instancia.Devolver(this);
         }
-        // Si es del mismo color, no hace nada: el disparo sigue de largo.
+        // Si es del mismo color el disparo sigue de largo.
     }
 }

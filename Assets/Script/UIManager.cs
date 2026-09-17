@@ -1,11 +1,6 @@
 using UnityEngine;
 using TMPro;
 
-// ============================================================
-// UIManager.cs  (COMPLETO)
-// Maneja las pantallas y el HUD. Se suscribe a los eventos del
-// GameManager (OBSERVER). Incluye los botones de dificultad del menu.
-// ============================================================
 public class UIManager : MonoBehaviour
 {
     // --- Paneles de cada pantalla ---
@@ -20,7 +15,6 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        // OBSERVER: nos suscribimos a los tres eventos.
         GameManager.Instancia.OnEstadoCambiado += ActualizarPantallas;
         GameManager.Instancia.OnDistanciaCambiada += ActualizarDistancia;
         GameManager.Instancia.OnPuntajeCambiado += ActualizarPuntaje;
@@ -79,7 +73,7 @@ public class UIManager : MonoBehaviour
         textoPuntaje.text = "Puntaje: " + GameManager.Instancia.Puntaje;
     }
 
-    // --- Botones de dificultad (menu) ---
+    // Botones de dificultad
     public void BotonDificultadNormal()
     {
         GameManager.Instancia.ConfigurarDificultad(Dificultad.Normal);

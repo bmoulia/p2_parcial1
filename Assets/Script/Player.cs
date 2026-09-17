@@ -1,11 +1,5 @@
 using UnityEngine;
 
-// ============================================================
-// Player.cs  (ACTUALIZADO)
-// Cambio: el jugador ahora DISPARA con click izquierdo. Cada disparo
-// sale de su polaridad actual y se lo pide al pool. Hay un tiempo de
-// espera entre tiros para que no se pueda disparar cada frame.
-// ============================================================
 public class Player : MonoBehaviour
 {
     [SerializeField] private float velocidadMovimiento = 8f;
@@ -77,7 +71,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    // Lee el click izquierdo para disparar, respetando el tiempo de espera.
+    // Lee el click izquierdo para disparar
     private void LeerDisparo()
     {
         // Solo se dispara mientras se esta jugando.
@@ -97,13 +91,13 @@ public class Player : MonoBehaviour
 
     private void Disparar()
     {
-        // Pedimos un disparo al pool (reciclado, no Instantiate).
+        // Pido un disparo al pool
         WorldObject disparo = ObjectPool.Instancia.Obtener(TipoObjeto.DisparoJugador);
 
-        // Lo ubicamos un poco adelante del jugador para que no se solape con el.
+        // Lo pongo un poco adelante del jugador para que no se solape.
         disparo.transform.position = transform.position + new Vector3(0f, 0f, 1f);
 
-        // El disparo sale de la MISMA polaridad que el jugador en este instante.
+        // Disparo de misma polaridad que el jugador
         disparo.EstablecerPolaridad(polaridadActual);
     }
 

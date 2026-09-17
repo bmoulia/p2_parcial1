@@ -20,7 +20,6 @@ public abstract class WorldObject : MonoBehaviour, IPoolable
     }
     
     // Indica si el disparo del jugador puede destruir este objeto.
-    // Por defecto NO. Las clases que sí (Obstacle, EnemyShip) lo pisan.
     public virtual bool EsDestruible
     {
         get { return false; }
